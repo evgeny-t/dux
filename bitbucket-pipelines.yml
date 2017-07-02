@@ -4,3 +4,4 @@ pipelines:
     - step:
         script:
           - npm publish
+          
