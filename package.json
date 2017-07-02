@@ -1,5 +1,5 @@
 {
-  "name": "dux",
+  "name": "redux-dux",
   "version": "0.1.0",
   "description": "",
   "main": "src/index.js",
