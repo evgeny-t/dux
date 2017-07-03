@@ -1,7 +1,7 @@
-import { snakeCase } from 'lodash.snakecase';
-import { set } from 'lodash.set';
-import { reduce } from 'lodash.reduce';
-import { map } from 'lodash.map';
+import snakeCase from 'lodash.snakecase';
+import set from 'lodash.set';
+import reduce from 'lodash.reduce';
+import map from 'lodash.map';
 
 export const combine = (...reducers) => (state, action) => {
   for (let i = 0; i < reducers.length; i += 1) {
