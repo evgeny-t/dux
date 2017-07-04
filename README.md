@@ -1,6 +1,8 @@
 # Dux for Redux
 
-$ npm i --save redux-dux
+```
+npm i --save redux-dux
+```
 
 This is a tiny utility for creating Redux modules.
 
