@@ -80,7 +80,11 @@ export function dux(options, selectors) {
       selectors,
       (acc, val, key) => set(acc, key, state => val(get(state, hash))),
       {}
-    )
+    ),
+    extend(actions, selectors) {
+      // TODO
+      Object.assign(this, actions)
+    }
   };
 
   reducers.push(combine(...map(options, createReducer)));
