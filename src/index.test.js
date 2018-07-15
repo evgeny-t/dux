@@ -23,7 +23,7 @@ describe('combine', () => {
   });
 });
 
-describe('dux', () => {
+describe.skip('dux', () => {
   it('should create an action creator and reducer', () => {
     const { foobar, reducer } = dux({
       foobar: (state, a, b, c) => ({

@@ -1,7 +1,18 @@
+import * as redux from 'redux';
 import snakeCase from 'lodash.snakecase';
 import set from 'lodash.set';
 import reduce from 'lodash.reduce';
 import map from 'lodash.map';
+import get from 'lodash.get';
+import upd from 'update-js';
+
+let store;
+let reducers = [];
+let combinedReducer = s => s;
+
+function duxReducer(...args) {
+  return combinedReducer(...args);
+}
 
 /**
  * Combines an array of reducers into one.
@@ -22,6 +33,16 @@ export function combine(...reducers) {
   };
 }
 
+function sdbm(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + (hash << 6) + (hash << 16) - hash;
+  }
+  hash = hash >>> 0;
+  return hash.toString(16);
+}
+
+// TODO(ET): deep-freeze slice in dev mode
 /**
  * Creates a Redux module.
  * @param {Object} options - set of key-value pairs, where key is an action
@@ -30,16 +51,52 @@ export function combine(...reducers) {
  *  Everything passed to the action creator will spread
  *  after first reducer's argument.
  */
-export function dux(options) {
-  return {
-    ...reduce(options, (acc, val, key) =>
-      set(acc, key, (...args) => ({
-        type: snakeCase(key).toUpperCase(),
-        args,
-      })), {}),
-    reducer: combine(
-      ...map(options, (val, key) =>
-        (state, { type, args }) =>
-          type === snakeCase(key).toUpperCase() ? val(state, ...args) : state)),
+export function dux(options, selectors) {
+  const hash = sdbm(reduce(options, (acc, __, key) => acc + key, ''));
+  const nameToType = key => hash + '/' + snakeCase(key).toUpperCase();
+
+  const createReducer = (reduceFn, key) => {
+    const actionType = nameToType(key);
+    return (state, { type, args }) => {
+      if (type !== actionType) return state;
+      const slice = get(state, hash);
+      return update(state, hash, reduceFn(slice, ...args));
+    };
   };
+
+  let self = {
+    ...reduce(
+      options,
+      (acc, val, key) =>
+        set(acc, key, (...args) =>
+          store.dispatch({
+            type: nameToType(key),
+            args
+          })
+        ),
+      {}
+    ),
+    selectors: reduce(
+      selectors,
+      (acc, val, key) => set(acc, key, state => val(get(state, hash))),
+      {}
+    )
+  };
+
+  reducers.push(combine(...map(options, createReducer)));
+  combinedReducer = combine(...reducers);
+  return self;
 }
+
+export function createStore(reducer, preloadedState, enhancers) {
+  if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+    enhancer = preloadedState;
+    preloadedState = undefined;
+  }
+
+  reducers.push(reducer);
+  combinedReducer = combine(...reducers);
+  return (store = redux.createStore(duxReducer, preloadedState, enhancers));
+}
+
+export const update = upd;
