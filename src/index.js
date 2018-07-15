@@ -42,6 +42,10 @@ function sdbm(str) {
   return hash.toString(16);
 }
 
+function createDux(rootSlicer) {
+  return
+}
+
 // TODO(ET): deep-freeze slice in dev mode
 /**
  * Creates a Redux module.
@@ -54,12 +58,13 @@ function sdbm(str) {
 export function dux(options, selectors) {
   const hash = sdbm(reduce(options, (acc, __, key) => acc + key, ''));
   const nameToType = key => hash + '/' + snakeCase(key).toUpperCase();
+  const slicer = state => get(state, hash);
 
   const createReducer = (reduceFn, key) => {
     const actionType = nameToType(key);
     return (state, { type, args }) => {
       if (type !== actionType) return state;
-      const slice = get(state, hash);
+      const slice = slicer(state);
       return update(state, hash, reduceFn(slice, ...args));
     };
   };
@@ -78,13 +83,20 @@ export function dux(options, selectors) {
     ),
     selectors: reduce(
       selectors,
-      (acc, val, key) => set(acc, key, state => val(get(state, hash))),
+      (acc, val, key) => set(acc, key, state => val(slicer(state))),
       {}
     ),
-    extend(actions, selectors) {
-      // TODO
-      Object.assign(this, actions)
-    }
+    // extend(actions, selectors) {
+    //   if (selectors) {
+    //     Object.assign(this, actions);
+    //     Object.assign(this.selectors, selectors);
+    //   } else {
+    //     const { selectors, extend, ...rest } = actions;
+    //     Object.assign(this, rest);
+    //     Object.assign(this.selectors, selectors);
+    //   }
+    //   return this;
+    // }
   };
 
   reducers.push(combine(...map(options, createReducer)));

@@ -8,7 +8,7 @@ const Pager = (dg, pagesize) =>
         return update(state, { page: 0 });
       },
       last: state => {
-        const total = dg.selectors.total();
+        const total = dg.selectors.total(state);
         return update(state, {
           page: Math.floor(total / pagesize)
         });
