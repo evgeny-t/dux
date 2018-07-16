@@ -52,39 +52,47 @@ function sdbm(str) {
  *  after first reducer's argument.
  */
 export function dux(options, selectors) {
-  const hash = sdbm(reduce(options, (acc, __, key) => acc + key, ''));
-  const nameToType = key => hash + '/' + snakeCase(key).toUpperCase();
-  const slicer = state => get(state, hash);
+  return (...childrenDux) => {
+    const rootSlicer = state => state;
+    const hash = sdbm(reduce(options, (acc, __, key) => acc + key, ''));
+    const nameToType = key => hash + '/' + snakeCase(key).toUpperCase();
+    const slicer = state => get(rootSlicer(state), hash);
 
-  const createReducer = (reduceFn, key) => {
-    const actionType = nameToType(key);
-    return (state, { type, args }) => {
-      if (type !== actionType) return state;
-      const slice = slicer(state);
-      return update(state, hash, reduceFn(slice, ...args));
+    const createReducer = (reduceFn, key) => {
+      const actionType = nameToType(key);
+      return (state, { type, args }) => {
+        if (type !== actionType) return state;
+        const slice = slicer(state);
+        // bug: result of reduceFn is set back to state[hash] instead of slicer
+        return update(state, hash, reduceFn(slice, ...args));
+      };
     };
+
+    const createAction = key => (...args) =>
+      store.dispatch({
+        type: nameToType(key),
+        args
+      });
+
+    const createSelector = fn => state => fn(slicer(state));
+
+    let self = {
+      ...reduce(
+        options,
+        (acc, val, key) => set(acc, key, createAction(key)),
+        {}
+      ),
+      selectors: reduce(
+        selectors,
+        (acc, val, key) => set(acc, key, createSelector(val)),
+        {}
+      )
+    };
+
+    reducers.push(combine(...map(options, createReducer)));
+    combinedReducer = combine(...reducers);
+    return self;
   };
-
-  const createAction = key => (...args) =>
-    store.dispatch({
-      type: nameToType(key),
-      args
-    });
-
-  const createSelector = fn => state => fn(slicer(state));
-
-  let self = {
-    ...reduce(options, (acc, val, key) => set(acc, key, createAction(key)), {}),
-    selectors: reduce(
-      selectors,
-      (acc, val, key) => set(acc, key, createSelector(val)),
-      {}
-    )
-  };
-
-  reducers.push(combine(...map(options, createReducer)));
-  combinedReducer = combine(...reducers);
-  return self;
 }
 
 export function createStore(reducer, preloadedState, enhancers) {

@@ -6,16 +6,22 @@ import { createStore } from '../src';
 
 import { dux, update } from '../src';
 
-const A = () => dux({ setA: (state, a) => update(state, { a }) });
-const B = () => dux({ setB: (state, b) => update(state, { b }) });
-const X = () => {
-  return dux(
+// dux(dux(), dux())(actions, selectors)
+
+const A = dux({ setA: (state, a) => update(state, { a }) });
+const B = dux({ setB: (state, b) => update(state, { b }) });
+
+const X = (A, B) => {
+  A = X.mount(A);
+  B = X.mount(B);
+  const x = dux(
     {
       setX: state => {
         // take a from A
         // take b from B
-        let a;
-        let b;
+        let a = A.a;
+        let b = B.b;
+
         return update(state, { x: `${a}-${b}` });
       }
     },
@@ -23,6 +29,7 @@ const X = () => {
       x: state => state.x
     }
   );
+  return x;
 };
 
 test('toy example', () => {
