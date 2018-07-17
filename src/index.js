@@ -80,14 +80,20 @@ export function dux(options, selectors) {
 
   const createSelector = fn => state => fn(get(state, hash));
 
-  let self = {
-    ...reduce(options, (acc, val, key) => set(acc, key, createAction(key)), {}),
-    selectors: reduce(
-      selectors,
-      (acc, val, key) => set(acc, key, createSelector(val)),
-      {}
-    )
-  };
+  let self = reduce(
+    options,
+    (acc, val, key) => set(acc, key, createAction(key)),
+    {}
+  );
+  Object.defineProperties(
+    self,
+    reduce(selectors, (acc, val, key) => {
+      const selector = createSelector(val);
+      return set(acc, key, {
+        get: () => selector(store.getState())
+      });
+    })
+  );
 
   reducers.push(combine(...map(options, createReducer)));
   combinedReducer = combine(...reducers);
@@ -96,7 +102,7 @@ export function dux(options, selectors) {
 
 export function createStore(reducer, preloadedState, enhancers) {
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
-    enhancer = preloadedState;
+    enhancers = preloadedState;
     preloadedState = undefined;
   }
 
