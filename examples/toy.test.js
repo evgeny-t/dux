@@ -34,7 +34,7 @@ const X = (A, B) => {
 
 test('toy example', () => {
   const store = createStore(s => s);
-  const x = X();
+  const x = X(A, B);
   expect(x.setX).toBeInstanceOf(Function);
   expect(x.setA).toBeInstanceOf(Function);
   expect(x.setB).toBeInstanceOf(Function);

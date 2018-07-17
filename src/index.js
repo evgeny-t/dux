@@ -42,6 +42,21 @@ function sdbm(str) {
   return hash.toString(16);
 }
 
+function hashKeys(o) {
+  return sdbm(reduce(o, (acc, __, key) => acc + key, ''));
+}
+
+const createReducerCreator = (nameToActionType, sliceKey) => (
+  reduceFn,
+  key
+) => {
+  const actionType = nameToActionType(key);
+  return (state, { type, args }) => {
+    if (type !== actionType) return state;
+    return update(state, sliceKey, reduceFn(get(state, sliceKey), ...args));
+  };
+};
+
 // TODO(ET): deep-freeze slice in dev mode
 /**
  * Creates a Redux module.
@@ -52,47 +67,31 @@ function sdbm(str) {
  *  after first reducer's argument.
  */
 export function dux(options, selectors) {
-  return (...childrenDux) => {
-    const rootSlicer = state => state;
-    const hash = sdbm(reduce(options, (acc, __, key) => acc + key, ''));
-    const nameToType = key => hash + '/' + snakeCase(key).toUpperCase();
-    const slicer = state => get(rootSlicer(state), hash);
+  const hash = hashKeys(options);
+  const nameToActionType = key => hash + '/' + snakeCase(key).toUpperCase();
 
-    const createReducer = (reduceFn, key) => {
-      const actionType = nameToType(key);
-      return (state, { type, args }) => {
-        if (type !== actionType) return state;
-        const slice = slicer(state);
-        // bug: result of reduceFn is set back to state[hash] instead of slicer
-        return update(state, hash, reduceFn(slice, ...args));
-      };
-    };
+  const createReducer = createReducerCreator(nameToActionType, hash);
 
-    const createAction = key => (...args) =>
-      store.dispatch({
-        type: nameToType(key),
-        args
-      });
+  const createAction = key => (...args) =>
+    store.dispatch({
+      type: nameToActionType(key),
+      args
+    });
 
-    const createSelector = fn => state => fn(slicer(state));
+  const createSelector = fn => state => fn(get(state, hash));
 
-    let self = {
-      ...reduce(
-        options,
-        (acc, val, key) => set(acc, key, createAction(key)),
-        {}
-      ),
-      selectors: reduce(
-        selectors,
-        (acc, val, key) => set(acc, key, createSelector(val)),
-        {}
-      )
-    };
-
-    reducers.push(combine(...map(options, createReducer)));
-    combinedReducer = combine(...reducers);
-    return self;
+  let self = {
+    ...reduce(options, (acc, val, key) => set(acc, key, createAction(key)), {}),
+    selectors: reduce(
+      selectors,
+      (acc, val, key) => set(acc, key, createSelector(val)),
+      {}
+    )
   };
+
+  reducers.push(combine(...map(options, createReducer)));
+  combinedReducer = combine(...reducers);
+  return self;
 }
 
 export function createStore(reducer, preloadedState, enhancers) {
@@ -101,6 +100,7 @@ export function createStore(reducer, preloadedState, enhancers) {
     preloadedState = undefined;
   }
 
+  // TODO: what if createStore is called multiple times?
   reducers.push(reducer);
   combinedReducer = combine(...reducers);
   return (store = redux.createStore(duxReducer, preloadedState, enhancers));
