@@ -87,12 +87,16 @@ export function dux(options, selectors) {
   );
   Object.defineProperties(
     self,
-    reduce(selectors, (acc, val, key) => {
-      const selector = createSelector(val);
-      return set(acc, key, {
-        get: () => selector(store.getState())
-      });
-    })
+    reduce(
+      selectors,
+      (acc, val, key) => {
+        const selector = createSelector(val);
+        return set(acc, key, {
+          get: () => selector(store.getState())
+        });
+      },
+      {}
+    )
   );
 
   reducers.push(combine(...map(options, createReducer)));
