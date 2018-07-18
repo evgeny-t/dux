@@ -4,20 +4,20 @@ import { ThinGrid } from './thinGrid';
 const Pager = (dg, pagesize) =>
   dux(
     {
-      first: state => {
-        return update(state, { page: 0 });
+      first: slice => {
+        return update(slice, { page: 0 });
       },
-      last: state => {
+      last: slice => state => {
         const total = dg.selectors.total(state);
-        return update(state, {
+        return update(slice, {
           page: Math.floor(total / pagesize)
         });
       },
-      previous: state => {
-        return update(state, { page: state.page - 1 });
+      previous: slice => {
+        return update(slice, { page: slice.page - 1 });
       },
-      next: state => {
-        return update(state, { page: state.page + 1 });
+      next: slice => {
+        return update(slice, { page: slice.page + 1 });
       }
     },
     {
@@ -42,8 +42,8 @@ export const ThickGrid = () => {
   const filter = Filter();
   const page = Pager(grid, 50);
   return page
-    .extend(grid)
-    .extend(filter)
+    .extend(grid, grid.selectors)
+    .extend(filter, filter.selectors)
     .extend(
       {},
       {

@@ -4,6 +4,7 @@ import set from 'lodash.set';
 import reduce from 'lodash.reduce';
 import map from 'lodash.map';
 import get from 'lodash.get';
+import assign from 'lodash.assign';
 import upd from 'update-js';
 
 let store;
@@ -53,7 +54,11 @@ const createReducerCreator = (nameToActionType, sliceKey) => (
   const actionType = nameToActionType(key);
   return (state, { type, args }) => {
     if (type !== actionType) return state;
-    return update(state, sliceKey, reduceFn(get(state, sliceKey), ...args));
+    let slice = reduceFn(get(state, sliceKey), ...args);
+    if (slice instanceof Function) {
+      slice = slice(state);
+    }
+    return update(state, sliceKey, slice);
   };
 };
 
@@ -85,23 +90,43 @@ export function dux(options, selectors) {
     (acc, val, key) => set(acc, key, createAction(key)),
     {}
   );
-  Object.defineProperties(
-    self,
-    reduce(
-      selectors,
-      (acc, val, key) => {
-        const selector = createSelector(val);
-        return set(acc, key, {
-          get: () => selector(store.getState())
-        });
-      },
-      {}
-    )
+  self.selectors = reduce(
+    selectors,
+    (acc, val, key) => {
+      const selector = createSelector(val);
+      return set(acc, key, selector);
+    },
+    {}
   );
+  self.extend = function(duck, selectors) {
+    const { selectors: __, ...actions } = duck;
+    assign(this, actions);
+    assign(this.selectors, selectors);
+    return this;
+  };
 
   reducers.push(combine(...map(options, createReducer)));
   combinedReducer = combine(...reducers);
   return self;
+}
+
+export function bindSelectors(...args) {
+  const selectorsArr = args.slice(0, args.length - 1);
+  const cb = args[args.length - 1];
+  return state => {
+    const sliceGetters = selectorsArr.map(selectors => {
+      return Object.defineProperties(
+        {},
+        reduce(
+          selectors,
+          (acc, selector, name) =>
+            set(acc, name, { get: () => selector(state) }),
+          {}
+        )
+      );
+    });
+    return cb(...sliceGetters);
+  };
 }
 
 export function createStore(reducer, preloadedState, enhancers) {

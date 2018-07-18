@@ -23,7 +23,7 @@ const X = (A, B) => {
   return x;
 };
 
-test('toy example', () => {
+test.skip('toy example', () => {
   const store = createStore(s => s);
   const A = dux(
     { setA: (state, a) => update(state, { a }) },

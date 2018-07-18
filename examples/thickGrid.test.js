@@ -13,12 +13,12 @@ test('thick grid', () => {
   expect(grid.selectors.total(store.getState())).toEqual(1000);
 
   grid.setFilter([{ field: '', value: '' }]);
-  grid.first();
+  grid.last();
 
   // TODO: selectors are inconsistent, in some cases,
   // the argument (state) is not necessary, in some it is.
   expect(grid.selectors.query(store.getState())).toEqual({
     filter: [{ field: '', value: '' }],
-    page: 0
+    page: 20
   });
 });
