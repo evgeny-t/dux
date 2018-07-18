@@ -15,8 +15,6 @@ test('thick grid', () => {
   grid.setFilter([{ field: '', value: '' }]);
   grid.last();
 
-  // TODO: selectors are inconsistent, in some cases,
-  // the argument (state) is not necessary, in some it is.
   expect(grid.selectors.query(store.getState())).toEqual({
     filter: [{ field: '', value: '' }],
     page: 20
