@@ -7,6 +7,10 @@ import get from 'lodash.get';
 import assign from 'lodash.assign';
 import upd from 'update-js';
 
+/**
+ * @module dux
+ */
+
 let store;
 let reducers = [];
 let combinedReducer = s => s;
@@ -66,10 +70,12 @@ const createReducerCreator = (nameToActionType, sliceKey) => (
 /**
  * Creates a Redux module.
  * @param {Object} options - set of key-value pairs, where key is an action
- *  creator name and value is a reducer function. The reducer functions differs
- *  from conventional reducer in a way treats arguments: (state, ...args).
- *  Everything passed to the action creator will spread
- *  after first reducer's argument.
+ *  creator name and value is a reducer function.
+ * The reducer function receives a slice of the state, corresponding
+ * to the module, and arguments passed to the action creator: (slice, ...args).
+ * The reducer function can return either a new slice or a function which
+ * receives the whole state and returns a new slice.
+ *
  */
 export function dux(options, selectors) {
   const hash = hashKeys(options);
@@ -129,6 +135,10 @@ export function bindSelectors(...args) {
   };
 }
 
+/**
+ * Creates Redux store.
+ * See [createStore.md](https://github.com/reduxjs/redux/blob/master/docs/api/createStore.md).
+ */
 export function createStore(reducer, preloadedState, enhancers) {
   if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
     enhancers = preloadedState;
@@ -141,4 +151,8 @@ export function createStore(reducer, preloadedState, enhancers) {
   return (store = redux.createStore(duxReducer, preloadedState, enhancers));
 }
 
+/**
+ * Object immutability helper.
+ * See [update-js](https://github.com/akuzko/update-js).
+ */
 export const update = upd;
