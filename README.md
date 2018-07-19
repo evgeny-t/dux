@@ -6,73 +6,75 @@ npm i --save redux-dux
 
 This is a tiny utility for creating Redux modules.
 
+## Benefits
+
+* Isolates state of the module, reduce function may update only related slice of the state.
+* No need to care about action and action types, these are abstracted away.
+
+## Why
+
+I had a need for a succinct way to define a redux module and express dependencies between modules.
+
 ## Example
 
 ```
-import { createStore } from 'redux'
-import { dux } from 'redux-dux'
+import { createStore, dux, update } from 'redux-dux';
 
+const store = createStore(s => s);
 
-let { reducer, set, inc, dec } = dux({
-  set: (state, val) => Object.assign({}, state, { foo: val }),
-  inc: (state) => Object.assign({}, state, { foo: state.foo + 1 }),
-  dec: (state) => Object.assign({}, state, { foo: state.foo - 1 }),
-})
+const grid = dux(
+    {
+      setRows: (state, rows, total) => {
+        return update(state, {
+          rows,
+          total
+        });
+      },
+      selectRow: (state, index) => {
+        return update(state, {
+          selected: state.rows[index]
+        });
+      }
+    },
+    {
+      rows: state => state.rows,
+      total: state => state.total,
+      selected: state => state.selected
+    }
+  );
 
-let store = createStore(reducer, {});
+grid.setRows([{ a: 1 }, { b: 2 }], 1000);
+console.log(grid.selectors.rows(store.getState())) // [{ a: 1 }, { b: 2 }]
 
-store.dispatch(set(1337))
-console.log(store.getState())
-
-store.dispatch(inc())
-console.log(store.getState())
-
-store.dispatch(dec())
-console.log(store.getState())
-
-/* outputs: 
-{ foo: 1337 }
-{ foo: 1338 }
-{ foo: 1337 }
-*/
 ```
 
-## Functions
+* [dux](#module_dux)
+    * [.update](#module_dux.update) : <code>function</code>
+    * [.dux(options)](#module_dux.dux)
+    * [.createStore()](#module_dux.createStore)
 
-<dl>
-<dt><a href="#combine">combine([reducers])</a></dt>
-<dd><p>Combines an array of reducers into one.
-If reducer doesn&#39;t modify the state it should return its first
-argument. In the case nothing is passed, the resulting
- reducer will be an identity function.</p>
-</dd>
-<dt><a href="#dux">dux(options)</a></dt>
-<dd><p>Creates a Redux module.</p>
-</dd>
-</dl>
+<a name="module_dux.update"></a>
 
-<a name="combine"></a>
+### dux.update : <code>function</code>
+Object immutability helper.
+See [update-js](https://github.com/akuzko/update-js).
 
-## combine([reducers])
-Combines an array of reducers into one.
-If reducer doesn't modify the state it should return its first
-argument. In the case nothing is passed, the resulting
- reducer will be an identity function.
+**Kind**: static constant of [<code>dux</code>](#module_dux)
+<a name="module_dux.combine"></a>
 
-**Kind**: global function  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| [reducers] | <code>Array.&lt;function()&gt;</code> | Reducers to combine into one. |
-
-<a name="dux"></a>
-
-## dux(options)
+### dux.dux(options)
 Creates a Redux module.
 
-**Kind**: global function  
+**Kind**: static method of [<code>dux</code>](#module_dux)
 
 | Param | Type | Description |
 | --- | --- | --- |
-| options | <code>Object</code> | set of key-value pairs, where key is an action  creator name and value is a reducer function. The reducer functions differs  from conventional reducer in a way treats arguments: (state, ...args).  Everything passed to the action creator will spread  after first reducer's argument. |
+| options | <code>Object</code> | set of key-value pairs, where key is an action  creator name and value is a reducer function. The reducer function receives a slice of the state, corresponding to the module, and arguments passed to the action creator: (slice, ...args). The reducer function can return either a new slice or a function which receives the whole state and returns a new slice. |
 
+<a name="module_dux.createStore"></a>
+
+### dux.createStore()
+Creates Redux store.
+See [createStore.md](https://github.com/reduxjs/redux/blob/master/docs/api/createStore.md).
+
+**Kind**: static method of [<code>dux</code>](#module_dux)

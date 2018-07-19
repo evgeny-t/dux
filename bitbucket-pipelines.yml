@@ -1,9 +1,10 @@
 image: node:6.9.4
 pipelines:
-  default:
-    - step:
-        script:
-          - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-          - npm i -D
-          - npm run build
-          - npm publish
+  branches:
+    master:
+      - step:
+          script:
+            - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+            - npm i -D
+            - npm run build
+            - npm publish

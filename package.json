@@ -1,6 +1,6 @@
 {
   "name": "redux-dux",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -17,19 +17,27 @@
     "dux"
   ],
   "author": "Evgeny Timoshenko timoshenko.evgeny@gmail.com",
-  "license": "ISC",
+  "license": "GLWTPL",
   "bugs": {
     "url": "https://github.com/evgeny-t/dux/issues"
   },
   "homepage": "https://github.com/evgeny-t/dux#readme",
   "dependencies": {
-    "babel-cli": "^6.24.1",
+    "lodash.assign": "^4.2.0",
+    "lodash.get": "^4.4.2",
     "lodash.map": "^4.6.0",
     "lodash.reduce": "^4.6.0",
     "lodash.set": "^4.3.2",
-    "lodash.snakecase": "^4.1.1"
+    "lodash.snakecase": "^4.1.1",
+    "redux": "^4.0.0",
+    "update-js": "^1.7.0"
+  },
+  "peerDependencies": {
+    "redux": "^4.0.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.26.3",
     "babel-jest": "^20.0.3",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
@@ -42,6 +50,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "jest": "^20.0.4",
     "jsdoc": "^3.4.3",
-    "jsdoc-to-markdown": "^3.0.0"
+    "jsdoc-to-markdown": "^3.0.0",
+    "regenerator-runtime": "^0.12.0"
   }
 }
