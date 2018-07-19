@@ -6,6 +6,15 @@ npm i --save redux-dux
 
 This is a tiny utility for creating Redux modules.
 
+## Benefits
+
+* Isolates state of the module, reduce function may update only related slice of the state.
+* No need to care about action and action types, these are abstracted away.
+
+## Why
+
+I had a need for a succinct way to define a redux module and express dependencies between modules.
+
 ## Example
 
 ```
